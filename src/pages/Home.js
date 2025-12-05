@@ -65,16 +65,13 @@ const Home = () => {
 
           <span className="createInfo">
             If you don't have an invite then create&nbsp;
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                createNewRoom(e);
-              }}
-              className="createNewBtn"
+            <button
+              type="button"
+              onClick={createNewRoom}
+              className="createNewBtn linkButton"
             >
               new room
-            </a>
+            </button>
           </span>
         </div>
       </div>
@@ -82,7 +79,11 @@ const Home = () => {
       <footer>
         <h4>
           Built with 💛 &nbsp; by{" "}
-          <a href="https://github.com/deependra3647/Code-Share" target="_blank" rel="noreferrer">
+          <a
+            href="https://github.com/deependra3647/Code-Share"
+            target="_blank"
+            rel="noreferrer"
+          >
             Deependra
           </a>
         </h4>
