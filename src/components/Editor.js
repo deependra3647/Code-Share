@@ -7,14 +7,16 @@ import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/edit/closebrackets';
 import ACTIONS from '../Actions';
 
-const Editor = ({socketRef, roomId, onCodeChange}) => {
+const Editor = ({ socketRef, roomId, onCodeChange }) => {
   const editorRef = useRef(null);
-  useEffect(() =>{
-    async function init(){
+
+  // --- Initialize CodeMirror only once ---
+  useEffect(() => {
+    const init = async () => {
       editorRef.current = Codemirror.fromTextArea(
-        document.getElementById("realtimeEditor"),
+        document.getElementById('realtimeEditor'),
         {
-          mode: {name: "javascript", json: true},
+          mode: { name: 'javascript', json: true },
           theme: 'dracula',
           autoCloseTags: true,
           autoCloseBrackets: true,
@@ -22,44 +24,48 @@ const Editor = ({socketRef, roomId, onCodeChange}) => {
         }
       );
 
-
-      editorRef.current.on('change',(instance, changes)=>{
-        console.log('changes', changes);
-        const {origin} = changes;
+      editorRef.current.on('change', (instance, changes) => {
+        const { origin } = changes;
         const code = instance.getValue();
         onCodeChange(code);
-        if(origin !== 'setValue'){
-          socketRef.current.emit(ACTIONS.CODE_CHANGE,{
+
+        if (origin !== 'setValue' && socketRef.current) {
+          socketRef.current.emit(ACTIONS.CODE_CHANGE, {
             roomId,
             code,
           });
         }
-        console.log(code);
       });
+    };
 
-      
-    }
     init();
-  },[]);
 
-  useEffect(() =>{
-    if(socketRef.current){
-      socketRef.current.on(ACTIONS.CODE_CHANGE,({code})=>{
-        if(code !== null){
-          editorRef.current.setValue(code);
-        }
-      });
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Safe: runs only once on mount
+
+
+  // --- Listen for CODE_CHANGE events ---
+  useEffect(() => {
+    if (!socketRef.current) return;
+
+    const sock = socketRef.current;
+
+    const handler = ({ code }) => {
+      if (code !== null && editorRef.current) {
+        editorRef.current.setValue(code);
+      }
+    };
+
+    sock.on(ACTIONS.CODE_CHANGE, handler);
 
     return () => {
-      socketRef.current.off(ACTIONS.CODE_CHANGE);
-    }
+      sock.off(ACTIONS.CODE_CHANGE, handler);
+    };
 
-  },[socketRef.current]);
+  }, [socketRef]); // socketRef is stable, so this is OK
 
 
-  return (
-    <textarea id="realtimeEditor"></textarea>
-  )
-}
+  return <textarea id="realtimeEditor"></textarea>;
+};
+
 export default Editor;
