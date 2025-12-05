@@ -143,3 +143,12 @@ footer a:hover {
     line-height: 1.6;
     padding-top: 20px;
 }
+.linkButton {
+  background: none;
+  border: none;
+  color: #4aee88; /* your theme green */
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}
