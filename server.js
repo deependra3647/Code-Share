@@ -7,7 +7,7 @@ const ACTIONS = require('./src/Actions');
 
 const server = http.createServer(app);
 
-// IMPORTANT: Enable WebSocket CORS
+// Enable WebSockets
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -16,11 +16,6 @@ const io = new Server(server, {
 });
 
 app.use(express.static("build"));
-
-// IMPORTANT: DO NOT USE app.use() here (breaks WebSockets)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
-});
 
 const userSocketMap = {};
 
@@ -73,5 +68,11 @@ io.on("connection", (socket) => {
   });
 });
 
+// FINAL FIX FOR EXPRESS 5 – REMOVE app.get("*")
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, "build", "index.html"));
+});
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
