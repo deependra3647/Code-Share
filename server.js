@@ -7,7 +7,7 @@ const ACTIONS = require('./src/Actions');
 
 const server = http.createServer(app);
 
-// FIX 1: Add required WebSocket CORS for Railway
+// IMPORTANT: Enable WebSocket CORS
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -15,15 +15,13 @@ const io = new Server(server, {
   },
 });
 
-// Serve frontend
 app.use(express.static("build"));
 
-// FIX 2: Must use GET, not use()
+// IMPORTANT: DO NOT USE app.use() here (breaks WebSockets)
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-// Connected user map
 const userSocketMap = {};
 
 function getAllConnectedClients(roomId) {
