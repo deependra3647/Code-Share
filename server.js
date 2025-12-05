@@ -7,12 +7,12 @@ const ACTIONS = require('./src/Actions');
 
 const server = http.createServer(app);
 
-// Enable WebSockets
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST"]
   },
+  path: "/socket.io/"
 });
 
 app.use(express.static("build"));
@@ -34,9 +34,7 @@ io.on("connection", (socket) => {
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     userSocketMap[socket.id] = username;
     socket.join(roomId);
-
     const clients = getAllConnectedClients(roomId);
-
     clients.forEach(({ socketId }) => {
       io.to(socketId).emit(ACTIONS.JOINED, {
         clients,
@@ -56,23 +54,21 @@ io.on("connection", (socket) => {
 
   socket.on("disconnecting", () => {
     const rooms = [...socket.rooms];
-
     rooms.forEach((roomId) => {
       socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
         socketId: socket.id,
         username: userSocketMap[socket.id],
       });
     });
-
     delete userSocketMap[socket.id];
   });
 });
 
-// FINAL FIX FOR EXPRESS 5 – REMOVE app.get("*")
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
