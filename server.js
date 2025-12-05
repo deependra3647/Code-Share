@@ -1,22 +1,25 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const http = require('http');
-const path = require('path');
-const { Server } = require('socket.io');
-const ACTIONS = require('./src/Actions');
+const http = require("http");
+const path = require("path");
+const { Server } = require("socket.io");
+const ACTIONS = require("./src/Actions");
 
 const server = http.createServer(app);
 
+// Socket.IO with CORS + required PATH
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
   },
-  path: "/socket.io/"
+  path: "/socket.io/",
 });
 
+// Serve React build
 app.use(express.static("build"));
 
+// User Map
 const userSocketMap = {};
 
 function getAllConnectedClients(roomId) {
@@ -28,12 +31,14 @@ function getAllConnectedClients(roomId) {
   );
 }
 
+// Socket events
 io.on("connection", (socket) => {
-  console.log("socket connected:", socket.id);
+  console.log("Socket Connected:", socket.id);
 
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     userSocketMap[socket.id] = username;
     socket.join(roomId);
+
     const clients = getAllConnectedClients(roomId);
     clients.forEach(({ socketId }) => {
       io.to(socketId).emit(ACTIONS.JOINED, {
@@ -64,11 +69,10 @@ io.on("connection", (socket) => {
   });
 });
 
+// IMPORTANT: Use this fallback (Express 5 safe)
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => console.log("Server running on port", PORT));
